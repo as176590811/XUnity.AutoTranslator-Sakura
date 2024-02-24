@@ -182,6 +182,9 @@ def translate():
     # 从GET请求中获取待翻译的文本
     text = request.args.get('text')  
     print(f"接收到的文本: {text}")
+    #检测text中是否包含"\n",如果包含则替换成\\n
+    if '\n' in text:
+        text=text.replace('\n','\\n')
 
     translation_queue = Queue()
     translation_thread = Thread(target=handle_translation, args=(text, translation_queue))
@@ -191,6 +194,7 @@ def translate():
     translation = translation_queue.get()
 
     if translation:
+         translation=translation.replace('\\n','\n')
          return f"{translation}"
     else:
          return "翻译失败", 500
