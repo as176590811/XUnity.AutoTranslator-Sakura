@@ -10,7 +10,7 @@ from queue import Queue
 from openai import OpenAI   #需要安装库 pip install openai
 
 
-dict_path='用户提示字典.json' # 提示字典路径，不使用则留空
+dict_path='用户替换字典.json' # 提示字典路径，不使用则留空
 
 # API配置
 Base_url = "http://127.0.0.1:8080"    #获取请求地址
