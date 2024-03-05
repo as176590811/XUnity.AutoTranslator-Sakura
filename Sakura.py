@@ -8,7 +8,7 @@ from urllib.parse import unquote
 from threading import Thread
 from queue import Queue
 import concurrent.futures
-from openai import OpenAI   #需要安装库 pip install openai
+from openai import OpenAI   #需要安装库 pip install openai  更新pip install --upgrade openai
 
 # 启用虚拟终端序列，支持ANSI转义代码
 os.system('')
@@ -34,6 +34,7 @@ dprompt_list=[dprompt0,dprompt1,dprompt1]
 
 app = Flask(__name__)
 
+
 #检查一下请求地址尾部是否为/v1，自动补全
 if Base_url[-3:] != "/v1":
     Base_url = Base_url + "/v1"
@@ -53,8 +54,8 @@ else:
     prompt_dict= {}
 
 def contains_japanese(text):
-    # 英文、日文字符的正则表达式
-    pattern = re.compile(r'[a-zA-Z\u3040-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FE]')
+    # 日文字符的正则表达式
+    pattern = re.compile(r'[\u3040-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FE]')
     return pattern.search(text) is not None
 
 
@@ -79,27 +80,6 @@ def has_repeated_sequence(string, count):
     return False
 
 
-#检测计算重复出现的短语或单字(仅计算，不作任何作用)
-def count_repeated_sequences(string, repeat_count):
-    # 匹配连续的单词或单个字符
-    pattern = re.compile(r'(\b\w+\b|\S)(\s+\1)+')
-    
-    # 存储重复序列及其出现次数
-    repeated_sequences = {}
-
-    # 查找所有连续重复的序列
-    for match in pattern.finditer(string):
-        # 获取匹配的文本
-        matched_text = match.group(0)
-        # 获取基础单词或字符
-        base_word = match.group(1)
-        # 计算基础单词或字符重复出现的次数（加1是因为基础单词本身也算一次）
-        repeat_times = len(matched_text.split()) // (matched_text.count(base_word) // len(base_word)) + 1
-        # 如果重复次数大于等于repeat_count，则记录
-        if repeat_times >= repeat_count:
-            repeated_sequences[base_word] = repeat_times
-
-    return repeated_sequences
 
 # 获得文本中包含的字典词汇
 def get_dict(text):
@@ -151,7 +131,7 @@ def handle_translation(text, translation_queue):
     # 更多模型参数
     model_params = {
         "temperature": 0.1, 
-        "frequency_penalty": 0.2,
+        "frequency_penalty": 0.1,
         "max_tokens": 512, 
         "top_p": 0.3, 
     }
@@ -203,15 +183,7 @@ def handle_translation(text, translation_queue):
                         elif text_end_special_char and not translation_end_special_char:
                             translations += text_end_special_char
                         elif not text_end_special_char and translation_end_special_char:
-                            translations = translations[:-1]
-                        
-                        #检测计算重复出现的短语或单字   
-                        repeated_sequences = count_repeated_sequences(translations, repeat_count)
-                        # 打印出每个重复短语及其连续出现的次数
-                        for sequence, times in repeated_sequences.items():
-                            print(f"\033[31m重复短语 \033[0m'\033[35m{sequence}\033[0m' \033[31m连续出现了\033[0m \033[35m{times} \033[0m次。")    
-                                    
-                        
+                            translations = translations[:-1]                                              
        
                         # 检查译文中是否包含日文字符和重复短语
                         contains_japanese_characters = contains_japanese(translations)
@@ -239,8 +211,8 @@ def handle_translation(text, translation_queue):
                     continue
                     
                 elif repeat_check:
-                    # 如果翻译结果中存在重复短语，限制重复序列的长度
-                    print("\033[31m检测到译文中存在重复短语，限制重复序列的长度。\033[0m")
+                    # 如果翻译结果中存在重复短语，调整参数
+                    print("\033[31m检测到译文中存在重复短语，调整参数。\033[0m")
                     model_params['frequency_penalty'] += 0.1
                     break  # 跳出for循环，使用调整过的frequency_penalty重新尝试翻译         
              
